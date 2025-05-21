@@ -5,10 +5,18 @@
 #include "stdio.h"
 #include "string.h"
 
+#ifdef _WIN32
+#define PLATFORM_COMPILER_ARGS "-IC:/VulkanSDK/1.3.296.0/Include"
+#define PLATFORM_LINKER_FLAGS "-LC:/VulkanSDK/1.3.296.0/Lib", "-lvulkan-1"
+#else
+#define PLATFORM_COMPILER_ARGS
+#define PLATFORM_LINKER_FLAGS "-lvulkan"
+#endif
+
 #define COMPILER_NAME "clang"
 #define OUTPUT_PROGRAM_NAME "main"
-#define COMPILER_ARGS
-#define LINKER_FLAGS
+#define COMPILER_ARGS PLATFORM_COMPILER_ARGS
+#define LINKER_FLAGS PLATFORM_LINKER_FLAGS
 
 #ifndef WIN32
 int isDirectory(const char *path) {
@@ -155,25 +163,22 @@ void remove_backslashes(char* data) {
 }
 
 void fix_backslashes(char* data) {
+    char* current_pos = data;
+    
+    char* cr_pos;
+    while ((cr_pos = strchr(current_pos, '\r'))) {
+        memmove(cr_pos, cr_pos + 1, strlen(cr_pos + 1) + 1);
+        current_pos = cr_pos;
+    }
+
+    current_pos = data;
     char* backslash;
-
-    char* data2 = data;
-    while((backslash=strchr(data2, '\r'))){
-        memmove(backslash, backslash+1, strlen(backslash+1)+1);
-        data2 = backslash;
-    }
-
-
-    // NOTE: Assumes strchr returns NULL on not found
-    while((backslash=strchr(data, '\\'))) {
-        switch(backslash[1]) {
-        case '\r': break;
-        case '\n': break;
-        default: *backslash = '/';
+    while ((backslash = strchr(current_pos, '\\'))) {
+        if (backslash[1] != '\r' && backslash[1] != '\n') {
+            *backslash = '/';
         }
-        data=backslash;
+        current_pos = backslash + 1;
     }
-
 }
 
 bool dep_analyse_str(char* data, char** result, Nob_File_Paths* paths) {
@@ -363,13 +368,12 @@ void remove_directory(const char *path) {
 int main(int argc, char** argv){
     NOB_GO_REBUILD_URSELF(argc,argv);
     Cmd cmd = {0};
-
     char* program = shift_args(&argc,&argv);
-
+    
     bool debug = true;
     bool run_after = false;
     bool clean = false;
-
+    
     while(argc > 0){
         char* arg = shift_args(&argc,&argv);
         if(strcmp(arg, "release") == 0){
@@ -390,32 +394,32 @@ int main(int argc, char** argv){
         remove_directory("build");
         return 0;
     }
-
-#ifdef _WIN32
+    
+    #ifdef _WIN32
     char* outputfilename = debug ? "build/debug/"OUTPUT_PROGRAM_NAME".exe" : "build/release/"OUTPUT_PROGRAM_NAME".exe";
-#else
+    #else
     char* outputfilename = debug ? "build/debug/"OUTPUT_PROGRAM_NAME : "build/release/"OUTPUT_PROGRAM_NAME;
-#endif
-
+    #endif
+    
     String_Builder sb = {0};
     String_Builder sb2 = {0};
     String_Builder sb3 = {0};
     File_Paths paths = {0};
     File_Paths src_paths = {0};
-
+    
     bool needed_rebuild = false;
-
+    
     if(!traverse_directory("src",&src_paths)) return 1;
-
+    
     char* ending = "c";
     filter_out_paths_ending(&ending,1,&src_paths);
-
+    
     for(int i = 0; i < src_paths.count; i++) {
         sb2.count = 0;
         sb_append_cstr(&sb2,BUILD_PATH);
         change_extension(&sb2,src_paths.items[i],"o");
         sb_append_null(&sb2);
-
+        
         if(!nob_c_needs_rebuild1(&sb, &paths, sb2.items,src_paths.items[i])) continue;
         needed_rebuild = true;
         if(!build(&cmd, &sb, &sb3,src_paths.items[i], debug)) return 1;
