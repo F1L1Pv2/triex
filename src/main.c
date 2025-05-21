@@ -1,25 +1,23 @@
-#include "stdio.h"
+#include <stdio.h>
+#include <stdint.h>
 
-#ifdef _WIN32
-#define VK_USE_PLATFORM_WIN32_KHR
-#endif
-#include "vulkan/vulkan.h"
+#define NOB_STRIP_PREFIX
+#include "nob.h"
+
+#include "engine/vulkan_globals.h"
+#include "engine/vulkan_initialize.h"
+#include "engine/vulkan_getDevice.h"
+
+typedef struct {
+    float x;
+    float y;
+} Vertex;
 
 int main(){
     printf("hello from C\nVULKANO PREPARE!\n");
 
-    VkInstanceCreateInfo instanceInfo = {0};
-    instanceInfo.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
-    instanceInfo.pNext = NULL;
-    instanceInfo.flags = 0;
-    instanceInfo.pApplicationInfo = NULL;
-    instanceInfo.enabledLayerCount = 0;
-    instanceInfo.ppEnabledLayerNames = NULL;
-    instanceInfo.enabledExtensionCount = 0;
-    instanceInfo.ppEnabledExtensionNames = NULL;
-
-    VkInstance instance;
-    if(vkCreateInstance(&instanceInfo,NULL,&instance) != VK_SUCCESS) return 1;
+    if(!initialize_vulkan()) return 1;
+    if(!getDevice()) return 1;
 
     printf("Created Instance %p\n", instance);
     return 0;

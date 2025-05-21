@@ -15,7 +15,7 @@
 
 #define COMPILER_NAME "clang"
 #define OUTPUT_PROGRAM_NAME "main"
-#define COMPILER_ARGS PLATFORM_COMPILER_ARGS
+#define COMPILER_ARGS PLATFORM_COMPILER_ARGS, "-I./"
 #define LINKER_FLAGS PLATFORM_LINKER_FLAGS
 
 #ifndef WIN32
@@ -238,6 +238,7 @@ bool build(Cmd* cmd, String_Builder* sb, String_Builder* sb2, char* filename, bo
 
     cmd_append(cmd,COMPILER_NAME, "-c", filename, "-o", sb->items, "-MP", "-MMD", COMPILER_ARGS);
     if(!debug) cmd_append(cmd, "-O3");
+    else cmd_append(cmd, "-g", "-D","DEBUG");
     return cmd_run_sync_and_reset(cmd);
 }
 
@@ -302,6 +303,7 @@ bool link(Cmd* cmd, char* output_filename, char** paths, size_t paths_count, boo
         cmd_append(cmd, sb.items);
     }
     cmd_append(cmd, "-o", output_filename, LINKER_FLAGS);
+    if(debug) cmd_append(cmd,"-g");
 
     return cmd_run_sync_and_reset(cmd);
 }
@@ -425,7 +427,7 @@ int main(int argc, char** argv){
         if(!build(&cmd, &sb, &sb3,src_paths.items[i], debug)) return 1;
     }
 
-    if(needed_rebuild)
+    if(needed_rebuild || !file_exists(outputfilename))
         if(!link(&cmd,outputfilename,src_paths.items, src_paths.count, debug)) return 1;
 
 
