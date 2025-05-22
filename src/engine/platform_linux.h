@@ -48,8 +48,6 @@ void platform_create_window(const char* title, size_t width, size_t height){
 
   running = true;
 
-  gameEngine->input->width = width;
-  gameEngine->input->height = height;
   XStoreName(display, window, title);
 }
 

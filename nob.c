@@ -7,16 +7,16 @@
 
 #ifdef _WIN32
 #define PLATFORM_COMPILER_ARGS "-IC:/VulkanSDK/1.3.296.0/Include"
-#define PLATFORM_LINKER_FLAGS "-LC:/VulkanSDK/1.3.296.0/Lib", "-lvulkan-1", "-lkernel32", "-luser32", "-lgdi32"
+#define PLATFORM_LINKER_FLAGS "-LC:/VulkanSDK/1.3.296.0/Lib", "-lvulkan-1", "-lkernel32", "-luser32", "-lgdi32", "-lshaderc_shared", "-lshaderc_util", "-lglslang", "-lSPIRV", "-lSPIRV-Tools", "-lSPIRV-Tools-opt"
 #else
-#define PLATFORM_COMPILER_ARGS
-#define PLATFORM_LINKER_FLAGS "-lvulkan", "-lX11", "-lXrandr"
+#define PLATFORM_COMPILER_ARGS ""
+#define PLATFORM_LINKER_FLAGS "-lvulkan", "-lX11", "-lXrandr", "-lshaderc"
 #endif
 
 #define COMPILER_NAME "clang"
 #define OUTPUT_PROGRAM_NAME "main"
 #define COMPILER_ARGS PLATFORM_COMPILER_ARGS, "-I./", "-I./src"
-#define LINKER_FLAGS PLATFORM_LINKER_FLAGS, "-lshaderc_shared", "-lshaderc_util", "-lglslang", "-lSPIRV", "-lSPIRV-Tools", "-lSPIRV-Tools-opt",
+#define LINKER_FLAGS PLATFORM_LINKER_FLAGS
 
 #ifndef WIN32
 int isDirectory(const char *path) {
@@ -292,7 +292,7 @@ bool nob_c_needs_rebuild1(Nob_String_Builder* string_buffer, Nob_File_Paths* pat
     return nob_c_needs_rebuild(string_buffer, paths, output_path, &input_path, 1);
 }
 
-bool link(Cmd* cmd, char* output_filename, char** paths, size_t paths_count, bool debug){
+bool link_files(Cmd* cmd, char* output_filename, char** paths, size_t paths_count, bool debug){
     cmd_append(cmd, COMPILER_NAME);
     for(int i = 0; i < paths_count; i++){
         String_Builder sb = {0};
@@ -428,7 +428,7 @@ int main(int argc, char** argv){
     }
 
     if(needed_rebuild || !file_exists(outputfilename))
-        if(!link(&cmd,outputfilename,src_paths.items, src_paths.count, debug)) return 1;
+        if(!link_files(&cmd,outputfilename,src_paths.items, src_paths.count, debug)) return 1;
 
 
     if(run_after){
