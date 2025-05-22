@@ -55,10 +55,18 @@ bool getDevice(){
     da_resize(&physicalDevices,physicalDevices.count);
     vkEnumeratePhysicalDevices(instance,&physicalDevices.count,physicalDevices.items);
 
+    physicalDevice = physicalDevices.items[0];
+
     if(physicalDevices.count > 1){
-        TODO("handle multiple devices");
-    }else{
-        physicalDevice = physicalDevices.items[0];
+        for(size_t i = 0; i < physicalDevices.count; i++){
+            VkPhysicalDeviceProperties properties;
+            vkGetPhysicalDeviceProperties(physicalDevices.items[i], &properties);
+
+            if(properties.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU) {
+                physicalDevice = physicalDevices.items[i];
+                break;
+            }
+        }
     }
 
     VkPhysicalDeviceProperties physicalDeviceProperties = {0};
