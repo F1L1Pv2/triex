@@ -21,7 +21,7 @@ static VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(
 
     // Optionally, return VK_FALSE if you want to stop Vulkan from continuing after the message.
     // VK_TRUE means the message is handled, and Vulkan can continue as usual.
-    return VK_FALSE;
+    return VK_TRUE;
 }
 #endif
 

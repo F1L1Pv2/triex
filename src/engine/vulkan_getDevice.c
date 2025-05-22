@@ -10,18 +10,17 @@
 #include "vulkan_getDevice.h"
 
 VkDevice device;
+VkPhysicalDevice physicalDevice;
+VkPhysicalDeviceLimits physicalDeviceLimits;
+VkQueue graphicsQueue;
+VkQueue presentQueue;
+VkPhysicalDeviceMemoryProperties memoryProperties;
 
 typedef struct{
     VkPhysicalDevice* items;
     uint32_t count;
     size_t capacity;
 } VkPhysicalDevices;
-
-typedef struct{
-    VkQueueFamilyProperties* items;
-    uint32_t count;
-    size_t capacity;
-} MultipleVkQueueFamilyProperties;
 
 typedef struct{
     VkDeviceQueueCreateInfo* items;
@@ -41,6 +40,8 @@ typedef struct{
     size_t capacity;
 }   MultipleVkQueuePriorities;
 
+MultipleVkQueueFamilyProperties multipleQueueFamilyProperties = {0};
+
 bool getDevice(){
 
     VkPhysicalDevices physicalDevices = {0};
@@ -54,8 +55,6 @@ bool getDevice(){
     da_resize(&physicalDevices,physicalDevices.count);
     vkEnumeratePhysicalDevices(instance,&physicalDevices.count,physicalDevices.items);
 
-    VkPhysicalDevice physicalDevice;
-
     if(physicalDevices.count > 1){
         TODO("handle multiple devices");
     }else{
@@ -64,10 +63,12 @@ bool getDevice(){
 
     VkPhysicalDeviceProperties physicalDeviceProperties = {0};
     vkGetPhysicalDeviceProperties(physicalDevice, &physicalDeviceProperties);
+    physicalDeviceLimits = physicalDeviceProperties.limits;
+    
+    printf("INFO: Chosen %s physical device\n", physicalDeviceProperties.deviceName);
 
-    printf("INFO: Chose %s physical device\n", physicalDeviceProperties.deviceName);
+    vkGetPhysicalDeviceMemoryProperties(physicalDevice, &memoryProperties);
 
-    MultipleVkQueueFamilyProperties multipleQueueFamilyProperties = {0};
     vkGetPhysicalDeviceQueueFamilyProperties(physicalDevice,&multipleQueueFamilyProperties.count, NULL);
     da_resize(&multipleQueueFamilyProperties,multipleQueueFamilyProperties.count);
     vkGetPhysicalDeviceQueueFamilyProperties(physicalDevice,&multipleQueueFamilyProperties.count, multipleQueueFamilyProperties.items);
@@ -76,8 +77,16 @@ bool getDevice(){
 
     MultipleVkQueuePriorities multipleVkQueuePriorities = {0};
 
+    int graphicsQueueFamilyIndex = -1;
+    int presentQueueFamilyIndex = -1;
+
     for(size_t i = 0; i < multipleQueueFamilyProperties.count; i++){
         VkQueueFamilyProperties queueFamilyProperties = multipleQueueFamilyProperties.items[i];
+
+        if((queueFamilyProperties.queueFlags & VK_QUEUE_GRAPHICS_BIT) && graphicsQueueFamilyIndex == -1){
+            graphicsQueueFamilyIndex = i;
+        }
+
 
         if((queueFamilyProperties.queueFlags & VK_QUEUE_GRAPHICS_BIT) || (queueFamilyProperties.queueFlags & VK_QUEUE_TRANSFER_BIT)){
             VkQueuePriorities vkQueuePriorities = {0};
@@ -85,6 +94,13 @@ bool getDevice(){
                 da_append(&vkQueuePriorities, 1.0);
             }
             da_append(&multipleVkQueuePriorities, vkQueuePriorities);
+
+            if(presentQueueFamilyIndex == -1){
+                VkBool32 presentSupport = false;
+                vkGetPhysicalDeviceSurfaceSupportKHR(physicalDevice, i, surface, &presentSupport);
+                if(presentSupport) presentQueueFamilyIndex = i;
+            }
+
 
             VkDeviceQueueCreateInfo queueCreateInfo = {0};
             queueCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
@@ -127,5 +143,7 @@ bool getDevice(){
     }
     da_free(multipleVkQueuePriorities);
 
+    vkGetDeviceQueue(device, graphicsQueueFamilyIndex, 0, &graphicsQueue);
+    vkGetDeviceQueue(device, presentQueueFamilyIndex, 0, &presentQueue);
     return true;
 }

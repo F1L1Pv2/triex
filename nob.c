@@ -7,16 +7,16 @@
 
 #ifdef _WIN32
 #define PLATFORM_COMPILER_ARGS "-IC:/VulkanSDK/1.3.296.0/Include"
-#define PLATFORM_LINKER_FLAGS "-LC:/VulkanSDK/1.3.296.0/Lib", "-lvulkan-1"
+#define PLATFORM_LINKER_FLAGS "-LC:/VulkanSDK/1.3.296.0/Lib", "-lvulkan-1", "-lkernel32", "-luser32", "-lgdi32"
 #else
 #define PLATFORM_COMPILER_ARGS
-#define PLATFORM_LINKER_FLAGS "-lvulkan"
+#define PLATFORM_LINKER_FLAGS "-lvulkan", "-lX11", "-lXrandr"
 #endif
 
 #define COMPILER_NAME "clang"
 #define OUTPUT_PROGRAM_NAME "main"
-#define COMPILER_ARGS PLATFORM_COMPILER_ARGS, "-I./"
-#define LINKER_FLAGS PLATFORM_LINKER_FLAGS
+#define COMPILER_ARGS PLATFORM_COMPILER_ARGS, "-I./", "-I./src"
+#define LINKER_FLAGS PLATFORM_LINKER_FLAGS, "-lshaderc_shared", "-lshaderc_util", "-lglslang", "-lSPIRV", "-lSPIRV-Tools", "-lSPIRV-Tools-opt",
 
 #ifndef WIN32
 int isDirectory(const char *path) {
