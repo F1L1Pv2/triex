@@ -1,9 +1,10 @@
 # TRIEX - Simple Vulkan Triangle Example
 vulkan triangle example made as simple as possible in C with nob.c build system
 
-# How to BUILD?
+![LinuxOutput](https://github.com/user-attachments/assets/1f4b5a01-9e6b-40b1-9130-f5a24463c6ba)
 
-## Platform specific steps
+
+# How to BUILD?
 
 --------------
 
@@ -28,13 +29,18 @@ vulkan triangle example made as simple as possible in C with nob.c build system
     clang -o nob.exe nob.c
     ./nob release run
 ```
-
-Note: if you istalled VulkanSDK in a folder different than `C:/VulkanSDK` specify your folder at the top of `nob.c` `VULKAN_SDK_SEARCH_PATH` macro
+> [!NOTE] 
+> if you istalled VulkanSDK in a folder different than `C:/VulkanSDK` specify your folder at the top of `nob.c` `VULKAN_SDK_SEARCH_PATH` macro
 
 --------------
 
 ## Things of note
 
-Note: If you are using compiler different than `clang` specify it in nob.c in `COMPILER_NAME` macro
-Note: If you dont specify `release` in during running nob it will build with debug information and `run` option will run app after successfull compilation
-Note: You only need to compile nob.c once
+> [!NOTE]
+> If you are using compiler different than `clang` specify it in nob.c in `COMPILER_NAME` macro
+
+> [!NOTE] 
+> If you dont specify `release` in during running nob it will build with debug information and `run` option will run app after successfull compilation
+
+> [!NOTE]
+> You only need to compile nob.c once
