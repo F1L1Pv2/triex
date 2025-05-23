@@ -1,5 +1,5 @@
-#ifndef FVFX_VULKAN_COMPILE_SHADER
-#define FVFX_VULKAN_COMPILE_SHADER
+#ifndef TRIEX_VULKAN_COMPILE_SHADER
+#define TRIEX_VULKAN_COMPILE_SHADER
 
 #include <stdbool.h>
 #include <vulkan/vulkan.h>

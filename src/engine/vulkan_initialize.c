@@ -31,9 +31,9 @@ bool initialize_vulkan(){
     VkApplicationInfo appInfo = {0};
     appInfo.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
     appInfo.pNext = NULL;
-    appInfo.pApplicationName = "FVFX";
+    appInfo.pApplicationName = "TRIEX";
     appInfo.applicationVersion = 1;
-    appInfo.pEngineName = "FVFX";
+    appInfo.pEngineName = "TRIEX";
     appInfo.engineVersion = 1;
     appInfo.apiVersion = VK_API_VERSION_1_0;
 

@@ -1,5 +1,5 @@
-#ifndef FVFX_VULKAN_INITIALIZE
-#define FVFX_VULKAN_INITIALIZE
+#ifndef TRIEX_VULKAN_INITIALIZE
+#define TRIEX_VULKAN_INITIALIZE
 
 #include <stdbool.h>
 

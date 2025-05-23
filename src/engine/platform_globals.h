@@ -1,5 +1,5 @@
-#ifndef FVFX_PLATFORM_TYPES
-#define FVFX_PLATFORM_TYPES
+#ifndef TRIEX_PLATFORM_TYPES
+#define TRIEX_PLATFORM_TYPES
 
 #ifdef _WIN32
 #include "MinWin.h"

@@ -2,12 +2,19 @@
 #define NOB_STRIP_PREFIX
 #include "nob.h"
 
-#include "stdio.h"
-#include "string.h"
+#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
 
 #ifdef _WIN32
-#define PLATFORM_COMPILER_ARGS "-IC:/VulkanSDK/1.3.296.0/Include"
-#define PLATFORM_LINKER_FLAGS "-LC:/VulkanSDK/1.3.296.0/Lib", "-lvulkan-1", "-lkernel32", "-luser32", "-lgdi32", "-lshaderc_shared", "-lshaderc_util", "-lglslang", "-lSPIRV", "-lSPIRV-Tools", "-lSPIRV-Tools-opt"
+
+#define VULKAN_SDK_SEARCH_PATH "C:/VulkanSDK"
+
+const char* vulkanSDKPathLIB;
+const char* vulkanSDKPathINC;
+
+#define PLATFORM_COMPILER_ARGS vulkanSDKPathINC
+#define PLATFORM_LINKER_FLAGS vulkanSDKPathLIB, "-lvulkan-1", "-lkernel32", "-luser32", "-lgdi32", "-lshaderc_shared", "-lshaderc_util", "-lglslang", "-lSPIRV", "-lSPIRV-Tools", "-lSPIRV-Tools-opt"
 #else
 #define PLATFORM_COMPILER_ARGS ""
 #define PLATFORM_LINKER_FLAGS "-lvulkan", "-lX11", "-lXrandr", "-lshaderc"
@@ -367,8 +374,53 @@ void remove_directory(const char *path) {
 #endif
 }
 
+#ifdef _WIN32
+bool is_version_newer(const char* v1, const char* v2) {
+    char buf1[256];
+    char buf2[256];
+    strncpy(buf1, v1, sizeof(buf1) - 1);
+    strncpy(buf2, v2, sizeof(buf2) - 1);
+    buf1[sizeof(buf1) - 1] = '\0';
+    buf2[sizeof(buf2) - 1] = '\0';
+    char* token1 = strtok(buf1, ".");
+    char* token2 = strtok(buf2, ".");
+    while (token1 != NULL || token2 != NULL) {
+        int num1 = (token1 != NULL) ? atoi(token1) : 0;
+        int num2 = (token2 != NULL) ? atoi(token2) : 0;
+        if (num1 > num2) return true;
+        else if (num1 < num2) return false;
+        token1 = strtok(NULL, ".");
+        token2 = strtok(NULL, ".");
+    }
+    return false;
+}
+#endif
+
 int main(int argc, char** argv){
     NOB_GO_REBUILD_URSELF(argc,argv);
+
+#ifdef _WIN32
+    if(folder_exists(VULKAN_SDK_SEARCH_PATH)){
+        Nob_File_Paths children = {0};
+        read_entire_dir(VULKAN_SDK_SEARCH_PATH,&children);
+        if(children.count == 0){
+            printf("ERROR: No versions inside VulkanSDK folder %s", VULKAN_SDK_SEARCH_PATH);
+            return 1;
+        }
+        const char* chosenVersion = children.items[0];
+        for(int i = 1; i < children.count; i++){
+            if(is_version_newer(children.items[i], chosenVersion)){
+                chosenVersion = children.items[i];
+            }
+        }
+        vulkanSDKPathINC = temp_sprintf("-I%s/%s/Include",VULKAN_SDK_SEARCH_PATH,chosenVersion);
+        vulkanSDKPathLIB = temp_sprintf("-L%s/%s/Lib",VULKAN_SDK_SEARCH_PATH,chosenVersion);
+    }else{
+        printf("ERROR: No VulkanSDK found on system (tried this path \"%s\")", VULKAN_SDK_SEARCH_PATH);
+        return 1;
+    }
+#endif
+
     Cmd cmd = {0};
     char* program = shift_args(&argc,&argv);
     
@@ -412,8 +464,8 @@ int main(int argc, char** argv){
     bool needed_rebuild = false;
     
     if(!traverse_directory("src",&src_paths)) return 1;
-    
     char* ending = "c";
+    
     filter_out_paths_ending(&ending,1,&src_paths);
     
     for(int i = 0; i < src_paths.count; i++) {
@@ -424,11 +476,11 @@ int main(int argc, char** argv){
         
         if(!nob_c_needs_rebuild1(&sb, &paths, sb2.items,src_paths.items[i])) continue;
         needed_rebuild = true;
-        if(!build(&cmd, &sb, &sb3,src_paths.items[i], debug)) return 1;
+        if(!build(&cmd, &sb, &sb3,(char**)src_paths.items[i], debug)) return 1;
     }
 
     if(needed_rebuild || !file_exists(outputfilename))
-        if(!link_files(&cmd,outputfilename,src_paths.items, src_paths.count, debug)) return 1;
+        if(!link_files(&cmd,outputfilename,(char**)src_paths.items, src_paths.count, debug)) return 1;
 
 
     if(run_after){

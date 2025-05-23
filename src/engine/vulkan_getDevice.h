@@ -1,5 +1,5 @@
-#ifndef FVFX_VULKAN_GET_DEVICE
-#define FVFX_VULKAN_GET_DEVICE
+#ifndef TRIEX_VULKAN_GET_DEVICE
+#define TRIEX_VULKAN_GET_DEVICE
 
 #include <stdbool.h>
 

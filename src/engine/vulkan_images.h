@@ -1,5 +1,5 @@
-#ifndef FVFX_VULKAN_IMAGES
-#define FVFX_VULKAN_IMAGES
+#ifndef TRIEX_VULKAN_IMAGES
+#define TRIEX_VULKAN_IMAGES
 
 #include <stdbool.h>
 #include <vulkan/vulkan.h>

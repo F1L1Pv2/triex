@@ -21,9 +21,7 @@
 #include "engine/platform.h"
 
 int main(){
-    printf("hello from C\nVULKANO PREPARE!\n");
-
-    platform_create_window("FVFX",640,480);
+    platform_create_window("TRIEX",640,480);
 
     if(!initialize_vulkan()) return 1;
     if(!createSurface()) return 1;

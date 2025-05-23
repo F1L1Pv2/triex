@@ -1,5 +1,5 @@
-#ifndef FVFX_VULKAN_GLOBALS
-#define FVFX_VULKAN_GLOBALS
+#ifndef TRIEX_VULKAN_GLOBALS
+#define TRIEX_VULKAN_GLOBALS
 
 #include "vulkan/vulkan.h"
 

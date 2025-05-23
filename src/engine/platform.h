@@ -1,5 +1,5 @@
-#ifndef FVFX_PLATFORM
-#define FVFX_PLATFORM
+#ifndef TRIEX_PLATFORM
+#define TRIEX_PLATFORM
 
 #include <stdbool.h>
 

@@ -1,5 +1,5 @@
-#ifndef FVFX_VULKAN_SYNCHRO
-#define FVFX_VULKAN_SYNCHRO
+#ifndef TRIEX_VULKAN_SYNCHRO
+#define TRIEX_VULKAN_SYNCHRO
 
 #include <stdbool.h>
 

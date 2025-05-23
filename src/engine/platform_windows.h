@@ -41,14 +41,14 @@ void platform_create_window(const char* title, size_t width, size_t height){
     windowClass.hIcon = NULL;
     windowClass.hCursor = NULL;
     windowClass.hbrBackground = NULL;
-    windowClass.lpszMenuName = "FVFX";
-    windowClass.lpszClassName = "FVFX";
+    windowClass.lpszMenuName = "TRIEX";
+    windowClass.lpszClassName = "TRIEX";
     windowClass.hIconSm = NULL;
     RegisterClassExA(&windowClass);
 
     hwnd = CreateWindowExA(
         0,
-        "FVFX",
+        "TRIEX",
         title,
         WS_OVERLAPPEDWINDOW,
         CW_USEDEFAULT, CW_USEDEFAULT, wr.right - wr.left, wr.bottom - wr.top,

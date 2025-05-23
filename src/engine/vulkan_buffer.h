@@ -1,5 +1,5 @@
-#ifndef FVFX_VULKAN_BUFFER
-#define FVFX_VULKAN_BUFFER
+#ifndef TRIEX_VULKAN_BUFFER
+#define TRIEX_VULKAN_BUFFER
 
 #include <stdbool.h>
 #include <vulkan/vulkan.h>

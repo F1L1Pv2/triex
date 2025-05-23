@@ -1,5 +1,5 @@
-#ifndef FVFX_VULKAN_HELPERS
-#define FVFX_VULKAN_HELPERS
+#ifndef TRIEX_VULKAN_HELPERS
+#define TRIEX_VULKAN_HELPERS
 
 #include <stdbool.h>
 
