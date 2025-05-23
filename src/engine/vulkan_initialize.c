@@ -57,13 +57,13 @@ bool initialize_vulkan(){
     const char* INFOextensions[] = {
     "VK_KHR_surface",
 #ifdef _WIN32
-    "VK_KHR_win32_surface"
+    "VK_KHR_win32_surface",
 #else
-    "VK_KHR_xlib_surface"
+    "VK_KHR_xlib_surface",
 #endif
 
 #ifdef DEBUG
-    , VK_EXT_DEBUG_UTILS_EXTENSION_NAME
+    VK_EXT_DEBUG_UTILS_EXTENSION_NAME,
 #endif
     };
 
