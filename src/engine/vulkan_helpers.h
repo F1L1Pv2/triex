@@ -5,6 +5,6 @@
 
 #include "vulkan/vulkan.h"
 int getNeededQueueFamilyIndex(VkQueueFlags flags);
-uint32_t findMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties);
+bool findMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties, uint32_t* index);
 
 #endif

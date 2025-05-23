@@ -17,7 +17,7 @@
 #include "engine/vulkan_compileShader.h"
 #include "engine/vulkan_initGraphicsPipeline.h"
 #include "engine/vulkan_synchro.h"
-#include "engine/vulkan_helpers.h"
+#include "engine/vulkan_buffer.h"
 #include "engine/platform.h"
 
 int main(){
@@ -73,62 +73,13 @@ int main(){
 
     VkBuffer vertexBuffer;
     VkDeviceMemory vertexMemory;
-
-    VkBufferCreateInfo vertexBufferCreateInfo = {0};
-    vertexBufferCreateInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
-    vertexBufferCreateInfo.pNext = NULL;
-    vertexBufferCreateInfo.flags = 0;
-    vertexBufferCreateInfo.size = sizeof(vertices);
-    vertexBufferCreateInfo.usage = VK_BUFFER_USAGE_VERTEX_BUFFER_BIT;
-    vertexBufferCreateInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
-    vertexBufferCreateInfo.queueFamilyIndexCount = 0;
-    vertexBufferCreateInfo.pQueueFamilyIndices = NULL;
-    vkCreateBuffer(device, &vertexBufferCreateInfo, NULL, &vertexBuffer);
-
-    VkMemoryRequirements vertexMemRequirements;
-    vkGetBufferMemoryRequirements(device, vertexBuffer, &vertexMemRequirements);
-    VkMemoryAllocateInfo vertexMemoryAllocateInfo = {0};
-    vertexMemoryAllocateInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
-    vertexMemoryAllocateInfo.pNext = NULL;
-    vertexMemoryAllocateInfo.allocationSize = vertexMemRequirements.size;
-    vertexMemoryAllocateInfo.memoryTypeIndex = findMemoryType(vertexMemRequirements.memoryTypeBits, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
-    vkAllocateMemory(device, &vertexMemoryAllocateInfo,NULL,&vertexMemory);
-
-    vkBindBufferMemory(device, vertexBuffer, vertexMemory, 0);
+    if(!createBuffer(VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT,sizeof(vertices),&vertexBuffer,&vertexMemory)) return 1;
+    if(!transferDataToMemory(vertexMemory, vertices, 0, sizeof(vertices))) return 1;
 
     VkBuffer indexBuffer;
     VkDeviceMemory indexMemory;
-
-    VkBufferCreateInfo indexBufferCreateInfo = {0};
-    indexBufferCreateInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
-    indexBufferCreateInfo.pNext = NULL;
-    indexBufferCreateInfo.flags = 0;
-    indexBufferCreateInfo.size = sizeof(indices);
-    indexBufferCreateInfo.usage = VK_BUFFER_USAGE_INDEX_BUFFER_BIT;
-    indexBufferCreateInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
-    indexBufferCreateInfo.queueFamilyIndexCount = 0;
-    indexBufferCreateInfo.pQueueFamilyIndices = NULL;
-    vkCreateBuffer(device, &indexBufferCreateInfo, NULL, &indexBuffer);
-
-    VkMemoryRequirements indexMemRequirements;
-    vkGetBufferMemoryRequirements(device, indexBuffer, &indexMemRequirements);
-    VkMemoryAllocateInfo indexMemoryAllocateInfo = {0};
-    indexMemoryAllocateInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
-    indexMemoryAllocateInfo.pNext = NULL;
-    indexMemoryAllocateInfo.allocationSize = indexMemRequirements.size;
-    indexMemoryAllocateInfo.memoryTypeIndex = findMemoryType(indexMemRequirements.memoryTypeBits, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
-    vkAllocateMemory(device, &indexMemoryAllocateInfo,NULL,&indexMemory);
-
-    vkBindBufferMemory(device, indexBuffer, indexMemory, 0);
-
-    void *mapped;
-    vkMapMemory(device, vertexMemory, 0, sizeof(vertices), 0, &mapped);
-    memcpy(mapped,vertices,sizeof(vertices));
-    vkUnmapMemory(device, vertexMemory);
-
-    vkMapMemory(device, indexMemory, 0, sizeof(indices), 0, &mapped);
-    memcpy(mapped,indices,sizeof(indices));
-    vkUnmapMemory(device, indexMemory);
+    if(!createBuffer(VK_BUFFER_USAGE_INDEX_BUFFER_BIT,VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT,sizeof(indices),&indexBuffer,&indexMemory)) return 1;
+    if(!transferDataToMemory(indexMemory, indices, 0, sizeof(indices))) return 1;
 
     uint32_t imageIndex;
 
@@ -147,7 +98,6 @@ int main(){
         commandBufferBeginInfo.pNext = NULL;
         commandBufferBeginInfo.flags = 0;
         commandBufferBeginInfo.pInheritanceInfo = NULL;
-    
         vkBeginCommandBuffer(cmd,&commandBufferBeginInfo);
 
         VkRenderPassBeginInfo renderPassBeginInfo = {0};
@@ -157,13 +107,11 @@ int main(){
         VkOffset2D offset = {0,0};
         renderPassBeginInfo.renderArea.offset = offset;
         renderPassBeginInfo.renderArea.extent = swapchainExtent;
-
         VkClearValue clearValue = {0};
         clearValue.color.float32[0] = 0.0f;
         clearValue.color.float32[1] = 0.0f;
         clearValue.color.float32[2] = 0.0f;
         clearValue.color.float32[3] = 1.0f;
-
         renderPassBeginInfo.clearValueCount = 1;
         renderPassBeginInfo.pClearValues = &clearValue;
         vkCmdBeginRenderPass(cmd, &renderPassBeginInfo, VK_SUBPASS_CONTENTS_INLINE);

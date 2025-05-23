@@ -15,6 +15,7 @@ VkPhysicalDeviceLimits physicalDeviceLimits;
 VkQueue graphicsQueue;
 VkQueue presentQueue;
 VkPhysicalDeviceMemoryProperties memoryProperties;
+MultipleVkQueueFamilyProperties multipleQueueFamilyProperties;
 
 typedef struct{
     VkPhysicalDevice* items;
@@ -39,8 +40,6 @@ typedef struct{
     size_t count;
     size_t capacity;
 }   MultipleVkQueuePriorities;
-
-MultipleVkQueueFamilyProperties multipleQueueFamilyProperties = {0};
 
 bool getDevice(){
 
@@ -88,38 +87,61 @@ bool getDevice(){
     int graphicsQueueFamilyIndex = -1;
     int presentQueueFamilyIndex = -1;
 
+    // finding needed queues
     for(size_t i = 0; i < multipleQueueFamilyProperties.count; i++){
-        VkQueueFamilyProperties queueFamilyProperties = multipleQueueFamilyProperties.items[i];
+        if(graphicsQueueFamilyIndex != -1 && presentQueueFamilyIndex != -1) break;
 
-        if((queueFamilyProperties.queueFlags & VK_QUEUE_GRAPHICS_BIT) && graphicsQueueFamilyIndex == -1){
+        if((multipleQueueFamilyProperties.items[i].queueFlags & VK_QUEUE_GRAPHICS_BIT) && graphicsQueueFamilyIndex == -1){
             graphicsQueueFamilyIndex = i;
         }
 
-
-        if((queueFamilyProperties.queueFlags & VK_QUEUE_GRAPHICS_BIT) || (queueFamilyProperties.queueFlags & VK_QUEUE_TRANSFER_BIT)){
-            VkQueuePriorities vkQueuePriorities = {0};
-            for(size_t j = 0; j < queueFamilyProperties.queueCount; j++){
-                da_append(&vkQueuePriorities, 1.0);
-            }
-            da_append(&multipleVkQueuePriorities, vkQueuePriorities);
-
-            if(presentQueueFamilyIndex == -1){
-                VkBool32 presentSupport = false;
-                vkGetPhysicalDeviceSurfaceSupportKHR(physicalDevice, i, surface, &presentSupport);
-                if(presentSupport) presentQueueFamilyIndex = i;
-            }
-
-
-            VkDeviceQueueCreateInfo queueCreateInfo = {0};
-            queueCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
-            queueCreateInfo.pNext = NULL;
-            queueCreateInfo.flags = 0;
-            queueCreateInfo.queueFamilyIndex = i;
-            queueCreateInfo.queueCount = queueFamilyProperties.queueCount;
-            queueCreateInfo.pQueuePriorities = multipleVkQueuePriorities.items[multipleVkQueuePriorities.count-1].items;
-
-            da_append(&queueCreateInfos, queueCreateInfo);
+        if(presentQueueFamilyIndex == -1){
+            VkBool32 presentSupport = false;
+            vkGetPhysicalDeviceSurfaceSupportKHR(physicalDevice, i, surface, &presentSupport);
+            if(presentSupport) presentQueueFamilyIndex = i;
         }
+    }
+
+    if(presentQueueFamilyIndex == -1){
+        printf("ERROR: Couldn't find graphics queue\n");
+        return false;
+    }
+
+    if(presentQueueFamilyIndex == -1){
+        printf("ERROR: Couldn't find present queue\n");
+        return false;
+    }
+
+    // Adding graphics queue familly into "Used families list"
+    VkQueuePriorities vkQueuePriorities = {0};
+    for(size_t j = 0; j < multipleQueueFamilyProperties.items[graphicsQueueFamilyIndex].queueCount; j++){
+        da_append(&vkQueuePriorities, 1.0);
+    }
+    da_append(&multipleVkQueuePriorities, vkQueuePriorities);
+
+    VkDeviceQueueCreateInfo queueCreateInfo = {0};
+    queueCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
+    queueCreateInfo.pNext = NULL;
+    queueCreateInfo.flags = 0;
+    queueCreateInfo.queueFamilyIndex = graphicsQueueFamilyIndex;
+    queueCreateInfo.queueCount = multipleQueueFamilyProperties.items[graphicsQueueFamilyIndex].queueCount;
+    queueCreateInfo.pQueuePriorities = multipleVkQueuePriorities.items[multipleVkQueuePriorities.count-1].items;
+    da_append(&queueCreateInfos, queueCreateInfo);
+
+    // If present queue familly is different from graphics queue one we repeat the process
+    if(graphicsQueueFamilyIndex != presentQueueFamilyIndex){
+        for(size_t j = 0; j < multipleQueueFamilyProperties.items[presentQueueFamilyIndex].queueCount; j++){
+            da_append(&vkQueuePriorities, 1.0);
+        }
+        da_append(&multipleVkQueuePriorities, vkQueuePriorities);
+
+        queueCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
+        queueCreateInfo.pNext = NULL;
+        queueCreateInfo.flags = 0;
+        queueCreateInfo.queueFamilyIndex = presentQueueFamilyIndex;
+        queueCreateInfo.queueCount = multipleQueueFamilyProperties.items[presentQueueFamilyIndex].queueCount;
+        queueCreateInfo.pQueuePriorities = multipleVkQueuePriorities.items[multipleVkQueuePriorities.count-1].items;
+        da_append(&queueCreateInfos, queueCreateInfo);
     }
 
     if(queueCreateInfos.count == 0){
@@ -150,6 +172,7 @@ bool getDevice(){
         da_free((multipleVkQueuePriorities.items[i]));
     }
     da_free(multipleVkQueuePriorities);
+    da_free(queueCreateInfos);
 
     vkGetDeviceQueue(device, graphicsQueueFamilyIndex, 0, &graphicsQueue);
     vkGetDeviceQueue(device, presentQueueFamilyIndex, 0, &presentQueue);
