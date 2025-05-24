@@ -149,9 +149,13 @@ bool getDevice(){
         return false;
     }
 
+    VkPhysicalDeviceVulkan13Features features3 = {0};
+    features3.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_3_FEATURES;
+    features3.dynamicRendering = VK_TRUE;
+
     VkDeviceCreateInfo deviceInfo = {0};
     deviceInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
-    deviceInfo.pNext = NULL;
+    deviceInfo.pNext = &features3;
     deviceInfo.flags = 0;
     deviceInfo.queueCreateInfoCount = queueCreateInfos.count;
     deviceInfo.pQueueCreateInfos = queueCreateInfos.items;

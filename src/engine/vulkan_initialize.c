@@ -35,7 +35,7 @@ bool initialize_vulkan(){
     appInfo.applicationVersion = 1;
     appInfo.pEngineName = "TRIEX";
     appInfo.engineVersion = 1;
-    appInfo.apiVersion = VK_API_VERSION_1_0;
+    appInfo.apiVersion = VK_API_VERSION_1_3;
 
     VkInstanceCreateInfo instanceInfo = {0};
     instanceInfo.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;

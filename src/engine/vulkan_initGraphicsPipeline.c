@@ -164,7 +164,7 @@ bool initGraphicsPipeline(VkShaderModule vertexShader, VkShaderModule fragmentSh
     graphicsPipelineCreateInfo.pColorBlendState = &pipelineColorBlendStateCreateInfo;
     graphicsPipelineCreateInfo.pDynamicState = &pipelineDynamicStateCreateInfo;
     graphicsPipelineCreateInfo.layout = pipelineLayout;
-    graphicsPipelineCreateInfo.renderPass = renderPass;
+    graphicsPipelineCreateInfo.renderPass = NULL;
     graphicsPipelineCreateInfo.subpass = 0;
     graphicsPipelineCreateInfo.basePipelineHandle = NULL; // OPTIONAL
     graphicsPipelineCreateInfo.basePipelineIndex = -1;    // OPTIONAL

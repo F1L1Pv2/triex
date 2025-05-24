@@ -11,8 +11,6 @@
 #include "engine/vulkan_initSwapchain.h"
 #include "engine/vulkan_initCommandPool.h"
 #include "engine/vulkan_initCommandBuffer.h"
-#include "engine/vulkan_initRenderPass.h"
-#include "engine/vulkan_initFramebuffers.h"
 #include "engine/vulkan_initPipelineLayout.h"
 #include "engine/vulkan_compileShader.h"
 #include "engine/vulkan_initGraphicsPipeline.h"
@@ -27,8 +25,6 @@ int main(){
     if(!createSurface()) return 1;
     if(!getDevice()) return 1;
     if(!initSwapchain()) return 1;
-    if(!initRenderPass()) return 1;
-    if(!initFramebuffers()) return 1;
     if(!initPipelineLayout()) return 1;
     if(!initCommandPool()) return 1;
     if(!initCommandBuffer()) return 1;
@@ -98,21 +94,29 @@ int main(){
         commandBufferBeginInfo.pInheritanceInfo = NULL;
         vkBeginCommandBuffer(cmd,&commandBufferBeginInfo);
 
-        VkRenderPassBeginInfo renderPassBeginInfo = {0};
-        renderPassBeginInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-        renderPassBeginInfo.renderPass = renderPass;
-        renderPassBeginInfo.framebuffer = framebuffers.items[imageIndex];
-        VkOffset2D offset = {0,0};
-        renderPassBeginInfo.renderArea.offset = offset;
-        renderPassBeginInfo.renderArea.extent = swapchainExtent;
-        VkClearValue clearValue = {0};
-        clearValue.color.float32[0] = 0.0f;
-        clearValue.color.float32[1] = 0.0f;
-        clearValue.color.float32[2] = 0.0f;
-        clearValue.color.float32[3] = 1.0f;
-        renderPassBeginInfo.clearValueCount = 1;
-        renderPassBeginInfo.pClearValues = &clearValue;
-        vkCmdBeginRenderPass(cmd, &renderPassBeginInfo, VK_SUBPASS_CONTENTS_INLINE);
+        VkRenderingAttachmentInfo colorAttachment = {0};
+        colorAttachment.sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO;
+        colorAttachment.imageView = swapchainImageViews.items[imageIndex];
+        colorAttachment.imageLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+        colorAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+        colorAttachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+        colorAttachment.clearValue.color.float32[0] = 0.0f;
+        colorAttachment.clearValue.color.float32[1] = 0.0f;
+        colorAttachment.clearValue.color.float32[2] = 0.0f;
+        colorAttachment.clearValue.color.float32[3] = 1.0f;
+
+        VkOffset2D offset = {0};
+        VkRenderingInfo renderingInfo = {0};
+        renderingInfo.sType = VK_STRUCTURE_TYPE_RENDERING_INFO;
+        renderingInfo.renderArea.offset = offset;
+        renderingInfo.renderArea.extent = swapchainExtent;
+        renderingInfo.layerCount = 1;
+        renderingInfo.colorAttachmentCount = 1;
+        renderingInfo.pColorAttachments = &colorAttachment;
+        renderingInfo.pDepthAttachment = NULL;
+        renderingInfo.pStencilAttachment = NULL;
+
+        vkCmdBeginRendering(cmd, &renderingInfo);
         
         VkViewport viewport = {0};
         viewport.x = 0.0f;
@@ -136,7 +140,7 @@ int main(){
 
         vkCmdDrawIndexed(cmd,ARRAY_LEN(indices),1,0,0,0);
     
-        vkCmdEndRenderPass(cmd);
+        vkCmdEndRendering(cmd);
 
         vkEndCommandBuffer(cmd);
 

@@ -30,14 +30,6 @@ typedef struct {
 extern VkImages swapchainImages;
 extern VkImageViews swapchainImageViews;
 
-typedef struct {
-    VkFramebuffer* items;
-    size_t count;
-    size_t capacity;
-} VkFramebuffers;
-
-extern VkFramebuffers framebuffers;
-
 typedef struct{
     VkQueueFamilyProperties* items;
     uint32_t count;
@@ -47,7 +39,6 @@ extern MultipleVkQueueFamilyProperties multipleQueueFamilyProperties;
 
 extern VkCommandPool commandPool;
 extern VkCommandBuffer cmd;
-extern VkRenderPass renderPass;
 
 typedef struct {
     float x;
