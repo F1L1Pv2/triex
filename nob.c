@@ -13,16 +13,16 @@
 const char* vulkanSDKPathLIB;
 const char* vulkanSDKPathINC;
 
-#define PLATFORM_COMPILER_ARGS vulkanSDKPathINC
-#define PLATFORM_LINKER_FLAGS vulkanSDKPathLIB, "-lvulkan-1", "-lkernel32", "-luser32", "-lgdi32", "-lshaderc_shared", "-lshaderc_util", "-lglslang", "-lSPIRV", "-lSPIRV-Tools", "-lSPIRV-Tools-opt"
+#define PLATFORM_COMPILER_ARGS vulkanSDKPathINC,
+#define PLATFORM_LINKER_FLAGS vulkanSDKPathLIB, "-lvulkan-1", "-lkernel32", "-luser32", "-lgdi32", "-lshaderc_shared", "-lshaderc_util", "-lglslang", "-lSPIRV", "-lSPIRV-Tools", "-lSPIRV-Tools-opt",
 #else
-#define PLATFORM_COMPILER_ARGS ""
-#define PLATFORM_LINKER_FLAGS "-lvulkan", "-lX11", "-lXrandr", "-lshaderc"
+#define PLATFORM_COMPILER_ARGS
+#define PLATFORM_LINKER_FLAGS "-lvulkan", "-lX11", "-lXrandr", "-lshaderc",
 #endif
 
 #define COMPILER_NAME "clang"
 #define OUTPUT_PROGRAM_NAME "main"
-#define COMPILER_ARGS PLATFORM_COMPILER_ARGS, "-I./", "-I./src"
+#define COMPILER_ARGS PLATFORM_COMPILER_ARGS "-I./", "-I./src"
 #define LINKER_FLAGS PLATFORM_LINKER_FLAGS
 
 #ifndef WIN32

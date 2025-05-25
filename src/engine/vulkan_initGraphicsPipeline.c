@@ -148,9 +148,17 @@ bool initGraphicsPipeline(VkShaderModule vertexShader, VkShaderModule fragmentSh
         pipelineShaderStageCreateInfoFragment
     };
 
+    VkPipelineRenderingCreateInfo pipelineRenderingCreateInfo = {0};
+    pipelineRenderingCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_RENDERING_CREATE_INFO;
+    pipelineRenderingCreateInfo.viewMask = 0;
+    pipelineRenderingCreateInfo.colorAttachmentCount = 1;
+    pipelineRenderingCreateInfo.pColorAttachmentFormats = &swapchainImageFormat;
+    pipelineRenderingCreateInfo.depthAttachmentFormat = VK_FORMAT_UNDEFINED;
+    pipelineRenderingCreateInfo.stencilAttachmentFormat = VK_FORMAT_UNDEFINED;
+
     VkGraphicsPipelineCreateInfo graphicsPipelineCreateInfo = {0};
     graphicsPipelineCreateInfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
-    graphicsPipelineCreateInfo.pNext = NULL;
+    graphicsPipelineCreateInfo.pNext = &pipelineRenderingCreateInfo;
     graphicsPipelineCreateInfo.flags = 0;
     graphicsPipelineCreateInfo.stageCount = 2;
     graphicsPipelineCreateInfo.pStages = (const VkPipelineShaderStageCreateInfo*)&pipelineShaderStageCreateInfos;
@@ -164,7 +172,7 @@ bool initGraphicsPipeline(VkShaderModule vertexShader, VkShaderModule fragmentSh
     graphicsPipelineCreateInfo.pColorBlendState = &pipelineColorBlendStateCreateInfo;
     graphicsPipelineCreateInfo.pDynamicState = &pipelineDynamicStateCreateInfo;
     graphicsPipelineCreateInfo.layout = pipelineLayout;
-    graphicsPipelineCreateInfo.renderPass = renderPass;
+    graphicsPipelineCreateInfo.renderPass = NULL;
     graphicsPipelineCreateInfo.subpass = 0;
     graphicsPipelineCreateInfo.basePipelineHandle = NULL; // OPTIONAL
     graphicsPipelineCreateInfo.basePipelineIndex = -1;    // OPTIONAL

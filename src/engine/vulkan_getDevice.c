@@ -149,16 +149,21 @@ bool getDevice(){
         return false;
     }
 
+    VkPhysicalDeviceDynamicRenderingFeatures dynamicRenderingFeature  = {0};
+    dynamicRenderingFeature.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DYNAMIC_RENDERING_FEATURES;
+    dynamicRenderingFeature.dynamicRendering = VK_TRUE;
+
     VkDeviceCreateInfo deviceInfo = {0};
     deviceInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
-    deviceInfo.pNext = NULL;
+    deviceInfo.pNext = &dynamicRenderingFeature;
     deviceInfo.flags = 0;
     deviceInfo.queueCreateInfoCount = queueCreateInfos.count;
     deviceInfo.pQueueCreateInfos = queueCreateInfos.items;
     const char* extensions[] = {
-        "VK_KHR_swapchain"
+        "VK_KHR_swapchain",
+        "VK_KHR_dynamic_rendering"
     };
-    deviceInfo.enabledExtensionCount = 1;
+    deviceInfo.enabledExtensionCount = ARRAY_LEN(extensions);
     deviceInfo.ppEnabledExtensionNames = extensions;
     deviceInfo.pEnabledFeatures = NULL;
 

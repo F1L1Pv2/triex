@@ -11,8 +11,6 @@
 #include "engine/vulkan_initSwapchain.h"
 #include "engine/vulkan_initCommandPool.h"
 #include "engine/vulkan_initCommandBuffer.h"
-#include "engine/vulkan_initRenderPass.h"
-#include "engine/vulkan_initFramebuffers.h"
 #include "engine/vulkan_initPipelineLayout.h"
 #include "engine/vulkan_compileShader.h"
 #include "engine/vulkan_initGraphicsPipeline.h"
@@ -27,8 +25,6 @@ int main(){
     if(!createSurface()) return 1;
     if(!getDevice()) return 1;
     if(!initSwapchain()) return 1;
-    if(!initRenderPass()) return 1;
-    if(!initFramebuffers()) return 1;
     if(!initPipelineLayout()) return 1;
     if(!initCommandPool()) return 1;
     if(!initCommandBuffer()) return 1;
@@ -98,22 +94,56 @@ int main(){
         commandBufferBeginInfo.pInheritanceInfo = NULL;
         vkBeginCommandBuffer(cmd,&commandBufferBeginInfo);
 
-        VkRenderPassBeginInfo renderPassBeginInfo = {0};
-        renderPassBeginInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-        renderPassBeginInfo.renderPass = renderPass;
-        renderPassBeginInfo.framebuffer = framebuffers.items[imageIndex];
-        VkOffset2D offset = {0,0};
-        renderPassBeginInfo.renderArea.offset = offset;
-        renderPassBeginInfo.renderArea.extent = swapchainExtent;
-        VkClearValue clearValue = {0};
-        clearValue.color.float32[0] = 0.0f;
-        clearValue.color.float32[1] = 0.0f;
-        clearValue.color.float32[2] = 0.0f;
-        clearValue.color.float32[3] = 1.0f;
-        renderPassBeginInfo.clearValueCount = 1;
-        renderPassBeginInfo.pClearValues = &clearValue;
-        vkCmdBeginRenderPass(cmd, &renderPassBeginInfo, VK_SUBPASS_CONTENTS_INLINE);
+        // Transition image layout from undefined to color attachment optimal
+        VkImageMemoryBarrier barrier = {0};
+        barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+        barrier.oldLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+        barrier.newLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+        barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+        barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+        barrier.image = swapchainImages.items[imageIndex];
+        barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+        barrier.subresourceRange.baseMipLevel = 0;
+        barrier.subresourceRange.levelCount = 1;
+        barrier.subresourceRange.baseArrayLayer = 0;
+        barrier.subresourceRange.layerCount = 1;
+        barrier.srcAccessMask = 0;
+        barrier.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
         
+        vkCmdPipelineBarrier(
+            cmd,
+            VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT,
+            VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
+            0,
+            0, NULL,
+            0, NULL,
+            1, &barrier
+        );
+        
+        VkRenderingAttachmentInfo colorAttachment = {0};
+        colorAttachment.sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO;
+        colorAttachment.imageView = swapchainImageViews.items[imageIndex];
+        colorAttachment.imageLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+        colorAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+        colorAttachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+        colorAttachment.clearValue.color.float32[0] = 0.0f;
+        colorAttachment.clearValue.color.float32[1] = 0.0f;
+        colorAttachment.clearValue.color.float32[2] = 0.0f;
+        colorAttachment.clearValue.color.float32[3] = 1.0f;
+
+        VkRenderingInfo renderingInfo = {0};
+        renderingInfo.sType = VK_STRUCTURE_TYPE_RENDERING_INFO;
+        VkOffset2D offset = {0};
+        renderingInfo.renderArea.offset = offset;
+        renderingInfo.renderArea.extent = swapchainExtent;
+        renderingInfo.layerCount = 1;
+        renderingInfo.colorAttachmentCount = 1;
+        renderingInfo.pColorAttachments = &colorAttachment;
+        renderingInfo.pDepthAttachment = NULL;
+        renderingInfo.pStencilAttachment = NULL;
+
+        vkCmdBeginRendering(cmd, &renderingInfo);
+
         VkViewport viewport = {0};
         viewport.x = 0.0f;
         viewport.y = 0.0f;
@@ -135,8 +165,24 @@ int main(){
         vkCmdBindIndexBuffer(cmd, indexBuffer, 0, VK_INDEX_TYPE_UINT32);
 
         vkCmdDrawIndexed(cmd,ARRAY_LEN(indices),1,0,0,0);
-    
-        vkCmdEndRenderPass(cmd);
+
+        vkCmdEndRendering(cmd);
+
+        // Transition image layout from color attachment optimal to present src
+        barrier.oldLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+        barrier.newLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
+        barrier.srcAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+        barrier.dstAccessMask = 0;
+        
+        vkCmdPipelineBarrier(
+            cmd,
+            VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
+            VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT,
+            0,
+            0, NULL,
+            0, NULL,
+            1, &barrier
+        );
 
         vkEndCommandBuffer(cmd);
 
@@ -150,24 +196,22 @@ int main(){
         submitInfo.pWaitDstStageMask = waitStages;
         submitInfo.commandBufferCount = 1;
         submitInfo.pCommandBuffers = &cmd;
-
+        
         VkSemaphore signalSemaphores[] = {renderFinishedSemaphore};
         submitInfo.signalSemaphoreCount = 1;
         submitInfo.pSignalSemaphores = signalSemaphores;
-
+        
         vkQueueSubmit(graphicsQueue, 1, &submitInfo, inFlightFence);
-
+        
         VkPresentInfoKHR presentInfo = {0};
         presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
-
         presentInfo.waitSemaphoreCount = 1;
         presentInfo.pWaitSemaphores = signalSemaphores;
-
+        
         VkSwapchainKHR swapChains[] = {swapchain};
         presentInfo.swapchainCount = 1;
         presentInfo.pSwapchains = swapChains;
         presentInfo.pImageIndices = &imageIndex;
-        presentInfo.pResults = NULL; // Optional
         vkQueuePresentKHR(presentQueue, &presentInfo);
     }
 
